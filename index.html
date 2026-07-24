@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Blue Diary</title>
+
+<!-- ホーム画面アイコン（これがこのページの存在理由。GAS本体では配信できない） -->
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Blue Diary">
+<meta name="theme-color" content="#0050BD">
+
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #0050BD; }
+  #app {
+    border: 0; width: 100%; height: 100%;
+    height: 100dvh; display: block;
+  }
+  /* iframe読み込み中の背景（BFPブルー＋ロゴ的なB） */
+  #loading {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(180deg, #1464D2 0%, #0050BD 100%);
+    color: #fff; font-family: -apple-system, sans-serif; font-size: 64px; font-weight: 800;
+    transition: opacity .4s; z-index: 10; pointer-events: none;
+  }
+  #loading.hide { opacity: 0; }
+</style>
+</head>
+<body>
+<div id="loading">B</div>
+<iframe id="app"
+  src="https://script.google.com/macros/s/AKfycbxhygOa4GPoMCXiQ8iLD5jS5FGkfJtM4o-0Y9R6pche6KpBF9ukO60Vv9SfJfl9UWN2/exec"
+  allow="camera; microphone; geolocation"
+  onload="document.getElementById('loading').classList.add('hide')"></iframe>
+</body>
+</html>
