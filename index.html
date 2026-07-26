@@ -36,5 +36,65 @@
   src="https://script.google.com/macros/s/AKfycbxhygOa4GPoMCXiQ8iLD5jS5FGkfJtM4o-0Y9R6pche6KpBF9ukO60Vv9SfJfl9UWN2/exec"
   allow="camera; microphone; geolocation"
   onload="document.getElementById('loading').classList.add('hide')"></iframe>
+
+<script>
+/* ============================================================
+ * ログイン状態・下書きの保管庫（このページが持つ）
+ *
+ * なぜ必要か:
+ *   GASは必ずユーザーのHTMLを script.googleusercontent.com のiframeで描画する。
+ *   iOS Safariは「別サイトのiframe」のlocalStorageに“その場限りの領域”を渡すため、
+ *   書き込みは成功するのにタブを閉じると消える。結果として
+ *   「この端末にログイン状態を残す」が効かず、毎回ログインからになっていた。
+ *   （GASのURLを直接開いても同じ。アプリ側のストレージには構造的に頼れない）
+ *
+ *   このページは最上位＝第一者なので、localStorageが確実に効く。
+ *   そこで保存はここが担い、iframeの中のアプリとはpostMessageでやりとりする。
+ *
+ * 扱うキーは bd_ で始まるものだけ（認証・前回ID・オフライン下書き・送信待ち）。
+ * ============================================================ */
+(function () {
+  'use strict';
+
+  // GASのユーザーコンテンツのオリジンだけを相手にする
+  function allowedOrigin(o) {
+    return /^https:\/\/([a-z0-9-]+\.)?googleusercontent\.com$/.test(o);
+  }
+  function ours(k) { return typeof k === 'string' && k.indexOf('bd_') === 0; }
+
+  function snapshot() {
+    var out = {};
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (ours(k)) out[k] = localStorage.getItem(k);
+      }
+    } catch (e) { /* プライベートモード等。空で返す */ }
+    return out;
+  }
+
+  window.addEventListener('message', function (e) {
+    if (!allowedOrigin(e.origin) || !e.data || !e.source) return;
+    var d = e.data;
+
+    if (d.type === 'bd-store-get-all') {
+      e.source.postMessage({ type: 'bd-store-all', data: snapshot() }, e.origin);
+      return;
+    }
+    if (d.type === 'bd-store-set' && ours(d.key)) {
+      try { localStorage.setItem(d.key, String(d.value)); } catch (err) {}
+      return;
+    }
+    if (d.type === 'bd-store-del' && ours(d.key)) {
+      try { localStorage.removeItem(d.key); } catch (err) {}
+      return;
+    }
+    if (d.type === 'bd-store-clear') {
+      var s = snapshot();
+      for (var k in s) { try { localStorage.removeItem(k); } catch (err) {} }
+    }
+  });
+})();
+</script>
 </body>
 </html>
